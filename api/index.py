@@ -46,8 +46,9 @@ HTML_CONTENT = """
                     <div class="w-2.5 h-2.5 bg-pink-500 rounded-full animate-bounce delay-150"></div>
                 </div>
 
-                <div id="successContent" class="hidden text-center py-6">
-                    <div id="resFull" class="text-3xl sm:text-4xl md:text-5xl font-bold text-white break-all leading-tight"></div>
+                <div id="successContent" class="hidden text-center py-6 space-y-4">
+                    <div id="resLine1" class="text-3xl sm:text-4xl md:text-5xl font-bold text-white break-all leading-tight"></div>
+                    <div id="resLine2" class="text-xl sm:text-2xl md:text-3xl font-semibold text-pink-400 break-all leading-tight opacity-80"></div>
                 </div>
 
                 <div id="errorContent" class="hidden flex items-start space-x-3 text-red-400 bg-red-400/10 p-4 rounded-xl border border-red-400/20 text-sm sm:text-base">
@@ -93,16 +94,22 @@ HTML_CONTENT = """
                     const numeric = data.numeric_solution.toLocaleString('de-DE', {maximumFractionDigits: 4});
                     const periodic = data.periodic_solution;
 
-                    let displayStr = `${variable} = `;
+                    let line1 = `${variable} = `;
+                    let line2 = "";
+
                     if (periodic) {
-                        displayStr += `${periodic} = ${fraction}`;
+                        line1 += periodic;
+                        line2 = `${variable} = ${fraction}`;
                     } else if (fraction.includes('/')) {
-                        displayStr += `${numeric} = ${fraction}`;
+                        line1 += numeric;
+                        line2 = `${variable} = ${fraction}`;
                     } else {
-                        displayStr += `${fraction}`;
+                        line1 += fraction;
+                        line2 = ""; // No second line needed for integers
                     }
                     
-                    document.getElementById('resFull').textContent = displayStr;
+                    document.getElementById('resLine1').textContent = line1;
+                    document.getElementById('resLine2').textContent = line2;
                     sc.classList.remove('hidden');
                 } else {
                     document.getElementById('errorMsg').textContent = data.detail;

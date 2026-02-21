@@ -49,9 +49,9 @@ def test_ui_full_flow(page: Page):
     page.click("#solveBtn")
     
     # Wait for result
-    res_full = page.locator("#resFull")
-    expect(res_full).to_be_visible()
-    expect(res_full).to_have_text("x = 5")
+    res_line1 = page.locator("#resLine1")
+    expect(res_line1).to_be_visible()
+    expect(res_line1).to_have_text("x = 5")
 
 def test_ui_error_flow(page: Page):
     page.goto(URL)
