@@ -1,162 +1,102 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="de">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gleichungslöser | Premium-Mathe-Tool</title>
-    <meta name="description"
-        content="Lösen Sie lineare Gleichungen mit einer Variablen sofort mit unserer premium SymPy-gesteuerten Engine.">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Outfit', sans-serif;
-            background: radial-gradient(circle at top right, #1a1a2e, #16213e, #0f3460);
-            min-height: 100vh;
-            color: #e94560;
-        }
-
-        .glass {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .input-glow:focus {
-            box-shadow: 0 0 15px rgba(233, 69, 96, 0.5);
-            border-color: #e94560;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .fade-in {
-            animation: fadeIn 0.5s ease-out forwards;
-        }
+        body { font-family: 'Outfit', sans-serif; background: radial-gradient(circle at top right, #1a1a2e, #16213e, #0f3460); min-height: 100vh; color: #e94560; margin: 0; display: flex; align-items: center; justify-content: center; }
+        .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .input-glow:focus { box-shadow: 0 0 15px rgba(233, 69, 96, 0.5); border-color: #e94560; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeIn 0.5s ease-out forwards; }
     </style>
 </head>
-
-<body class="flex items-center justify-center p-4">
-    <div class="max-w-2xl w-full glass p-8 rounded-3xl shadow-2xl fade-in">
-        <header class="text-center mb-10">
-            <h1
-                class="text-4xl font-bold bg-gradient-to-r from-[#e94560] to-[#ff758c] bg-clip-text text-transparent mb-2">
-                Gleichungslöser</h1>
-            <p class="text-gray-400 font-light">Geben Sie Ihre lineare Gleichung ein (z. B. <span
-                    class="text-pink-400 italic">2x + 5 = 15</span>)</p>
+<body class="p-4 sm:p-6 md:p-8">
+    <div class="max-w-xl w-full glass p-6 sm:p-10 rounded-2xl sm:rounded-3xl shadow-2xl fade-in">
+        <header class="text-center mb-8 sm:mb-12">
+            <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-[#e94560] to-[#ff758c] bg-clip-text text-transparent mb-3">Gleichungslöser</h1>
+            <p class="text-gray-400 font-light text-sm sm:base">Lineare Gleichungen mit einer Variablen sofort lösen.</p>
         </header>
 
         <div class="space-y-6">
             <div class="relative">
-                <input type="text" id="equation" placeholder="2x + 5 = 15"
-                    class="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-2xl text-white outline-none transition-all input-glow"
-                    autocomplete="off">
-                <div class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
-                    Eingabetaste drücken
-                </div>
+                <input type="text" id="equation" placeholder="z.B. 2x + 5 = 15" class="w-full bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl py-4 px-5 sm:px-6 text-xl sm:text-2xl text-white outline-none transition-all input-glow placeholder:text-gray-600" autocomplete="off">
+                <div class="hidden md:block absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 text-xs">Enter drücken</div>
             </div>
 
-            <button id="solveBtn"
-                class="w-full bg-gradient-to-r from-[#e94560] to-[#ff758c] text-white font-bold py-4 rounded-2xl hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-pink-900/20">
-                Gleichung lösen
-            </button>
+            <button id="solveBtn" class="w-full bg-gradient-to-r from-[#e94560] to-[#ff758c] text-white font-bold py-4 rounded-xl sm:rounded-2xl hover:scale-[1.01] active:scale-[0.99] transition-all shadow-lg shadow-pink-900/20 text-lg">Gleichung lösen</button>
 
-            <div id="resultContainer"
-                class="hidden glass rounded-2xl p-6 border-pink-500/20 transition-all duration-500">
+            <div id="resultContainer" class="hidden glass rounded-xl sm:rounded-2xl p-5 sm:p-8 border-pink-500/20 transition-all duration-500">
                 <div id="loading" class="hidden flex items-center justify-center space-x-2 py-4">
-                    <div class="w-3 h-3 bg-pink-500 rounded-full animate-bounce"></div>
-                    <div class="w-3 h-3 bg-pink-500 rounded-full animate-bounce delay-75"></div>
-                    <div class="w-3 h-3 bg-pink-500 rounded-full animate-bounce delay-150"></div>
+                    <div class="w-2.5 h-2.5 bg-pink-500 rounded-full animate-bounce"></div>
+                    <div class="w-2.5 h-2.5 bg-pink-500 rounded-full animate-bounce delay-75"></div>
+                    <div class="w-2.5 h-2.5 bg-pink-500 rounded-full animate-bounce delay-150"></div>
                 </div>
 
                 <div id="successContent" class="hidden text-center">
-                    <p class="text-gray-400 text-sm uppercase tracking-widest mb-1">Ergebnis für <span id="resVar"
-                            class="text-pink-400">x</span></p>
-                    <div id="resVal" class="text-5xl font-bold text-white mb-2">0</div>
-                    <p id="resNumeric" class="text-gray-500 text-sm"></p>
+                    <p class="text-gray-400 text-xs uppercase tracking-widest mb-2">Ergebnis für <span id="resVar" class="text-pink-400 font-bold">x</span></p>
+                    <div id="resVal" class="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-3 break-all">0</div>
+                    <div id="resNumeric" class="text-gray-500 text-sm bg-white/5 py-1 px-3 rounded-full inline-block"></div>
                 </div>
 
-                <div id="errorContent"
-                    class="hidden flex items-start space-x-3 text-red-400 bg-red-400/10 p-4 rounded-xl border border-red-400/20">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                <div id="errorContent" class="hidden flex items-start space-x-3 text-red-400 bg-red-400/10 p-4 rounded-xl border border-red-400/20 text-sm sm:text-base">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
                     </svg>
-                    <span id="errorMsg">Etwas ist schiefgelaufen.</span>
+                    <span id="errorMsg"></span>
                 </div>
             </div>
         </div>
 
-        <footer class="mt-10 text-center text-gray-500 text-xs">
-            Unterstützt durch SymPy & FastAPI
+        <footer class="mt-10 sm:mt-16 text-center text-gray-500 text-[10px] sm:text-xs uppercase tracking-widest">
+            Powered by SymPy Core & FastAPI
         </footer>
     </div>
 
     <script>
-        const equationInput = document.getElementById('equation');
-        const solveBtn = document.getElementById('solveBtn');
-        const resultContainer = document.getElementById('resultContainer');
-        const loading = document.getElementById('loading');
-        const successContent = document.getElementById('successContent');
-        const errorContent = document.getElementById('errorContent');
-        const resVar = document.getElementById('resVar');
-        const resVal = document.getElementById('resVal');
-        const resNumeric = document.getElementById('resNumeric');
-        const errorMsg = document.getElementById('errorMsg');
-
+        const eqI = document.getElementById('equation');
+        const sBtn = document.getElementById('solveBtn');
+        const rC = document.getElementById('resultContainer');
+        const ld = document.getElementById('loading');
+        const sc = document.getElementById('successContent');
+        const ec = document.getElementById('errorContent');
+        
         const solve = async () => {
-            const eq = equationInput.value.trim();
-            if (!eq) return;
-
-            // Show container & loading
-            resultContainer.classList.remove('hidden');
-            loading.classList.remove('hidden');
-            successContent.classList.add('hidden');
-            errorContent.classList.add('hidden');
-
+            const val = eqI.value.trim();
+            if(!val) return;
+            
+            rC.classList.remove('hidden'); ld.classList.remove('hidden'); sc.classList.add('hidden'); ec.classList.add('hidden');
+            
             try {
-                const response = await fetch('/api/solve', {
+                const res = await fetch('/api/solve', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ equation: eq })
+                    body: JSON.stringify({ equation: val })
                 });
-
-                const data = await response.json();
-
-                loading.classList.add('hidden');
-
-                if (response.ok) {
-                    resVar.textContent = data.variable;
-                    resVal.textContent = data.solution;
-                    resNumeric.textContent = `Dezimal: ${data.numeric_solution.toFixed(4)}`;
-                    successContent.classList.remove('hidden');
+                const data = await res.json();
+                ld.classList.add('hidden');
+                
+                if (res.ok) {
+                    document.getElementById('resVar').textContent = data.variable;
+                    document.getElementById('resVal').textContent = data.solution;
+                    document.getElementById('resNumeric').textContent = `Dezimal: ${data.numeric_solution.toLocaleString('de-DE', {maximumFractionDigits: 4})}`;
+                    sc.classList.remove('hidden');
                 } else {
-                    errorMsg.textContent = data.detail || 'Fehler beim Lösen der Gleichung.';
-                    errorContent.classList.remove('hidden');
+                    document.getElementById('errorMsg').textContent = data.detail;
+                    ec.classList.remove('hidden');
                 }
-            } catch (err) {
-                loading.classList.add('hidden');
-                errorMsg.textContent = 'Netzwerkfehler. Läuft der Server?';
-                errorContent.classList.remove('hidden');
+            } catch {
+                ld.classList.add('hidden');
+                document.getElementById('errorMsg').textContent = 'Verbindungsfehler zum Server.';
+                ec.classList.remove('hidden');
             }
         };
 
-        solveBtn.addEventListener('click', solve);
-        equationInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') solve();
-        });
+        sBtn.addEventListener('click', solve);
+        eqI.addEventListener('keypress', (e) => { if(e.key === 'Enter') solve(); });
     </script>
 </body>
-
 </html>
