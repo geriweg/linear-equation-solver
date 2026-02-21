@@ -36,10 +36,8 @@
                     <div class="w-2.5 h-2.5 bg-pink-500 rounded-full animate-bounce delay-150"></div>
                 </div>
 
-                <div id="successContent" class="hidden text-center">
-                    <p class="text-gray-400 text-xs uppercase tracking-widest mb-2">Ergebnis für <span id="resVar" class="text-pink-400 font-bold">x</span></p>
-                    <div id="resVal" class="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-3 break-all">0</div>
-                    <div id="resNumeric" class="text-gray-500 text-sm bg-white/5 py-1 px-3 rounded-full inline-block"></div>
+                <div id="successContent" class="hidden text-center py-6">
+                    <div id="resFull" class="text-3xl sm:text-4xl md:text-5xl font-bold text-white break-all leading-tight"></div>
                 </div>
 
                 <div id="errorContent" class="hidden flex items-start space-x-3 text-red-400 bg-red-400/10 p-4 rounded-xl border border-red-400/20 text-sm sm:text-base">
@@ -80,9 +78,21 @@
                 ld.classList.add('hidden');
                 
                 if (res.ok) {
-                    document.getElementById('resVar').textContent = data.variable;
-                    document.getElementById('resVal').textContent = data.solution;
-                    document.getElementById('resNumeric').textContent = `Dezimal: ${data.numeric_solution.toLocaleString('de-DE', {maximumFractionDigits: 4})}`;
+                    const variable = data.variable;
+                    const fraction = data.solution;
+                    const numeric = data.numeric_solution.toLocaleString('de-DE', {maximumFractionDigits: 4});
+                    const periodic = data.periodic_solution;
+
+                    let displayStr = `${variable} = `;
+                    if (periodic) {
+                        displayStr += `${periodic} = ${fraction}`;
+                    } else if (fraction.includes('/')) {
+                        displayStr += `${numeric} = ${fraction}`;
+                    } else {
+                        displayStr += `${fraction}`;
+                    }
+                    
+                    document.getElementById('resFull').textContent = displayStr;
                     sc.classList.remove('hidden');
                 } else {
                     document.getElementById('errorMsg').textContent = data.detail;

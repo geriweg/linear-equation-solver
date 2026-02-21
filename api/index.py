@@ -46,10 +46,8 @@ HTML_CONTENT = """
                     <div class="w-2.5 h-2.5 bg-pink-500 rounded-full animate-bounce delay-150"></div>
                 </div>
 
-                <div id="successContent" class="hidden text-center">
-                    <p class="text-gray-400 text-xs uppercase tracking-widest mb-2">Ergebnis für <span id="resVar" class="text-pink-400 font-bold">x</span></p>
-                    <div id="resVal" class="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-3 break-all">0</div>
-                    <div id="resNumeric" class="text-gray-500 text-sm bg-white/5 py-1 px-3 rounded-full inline-block"></div>
+                <div id="successContent" class="hidden text-center py-6">
+                    <div id="resFull" class="text-3xl sm:text-4xl md:text-5xl font-bold text-white break-all leading-tight"></div>
                 </div>
 
                 <div id="errorContent" class="hidden flex items-start space-x-3 text-red-400 bg-red-400/10 p-4 rounded-xl border border-red-400/20 text-sm sm:text-base">
@@ -90,9 +88,21 @@ HTML_CONTENT = """
                 ld.classList.add('hidden');
                 
                 if (res.ok) {
-                    document.getElementById('resVar').textContent = data.variable;
-                    document.getElementById('resVal').textContent = data.solution;
-                    document.getElementById('resNumeric').textContent = `Dezimal: ${data.numeric_solution.toLocaleString('de-DE', {maximumFractionDigits: 4})}`;
+                    const variable = data.variable;
+                    const fraction = data.solution;
+                    const numeric = data.numeric_solution.toLocaleString('de-DE', {maximumFractionDigits: 4});
+                    const periodic = data.periodic_solution;
+
+                    let displayStr = `${variable} = `;
+                    if (periodic) {
+                        displayStr += `${periodic} = ${fraction}`;
+                    } else if (fraction.includes('/')) {
+                        displayStr += `${numeric} = ${fraction}`;
+                    } else {
+                        displayStr += `${fraction}`;
+                    }
+                    
+                    document.getElementById('resFull').textContent = displayStr;
                     sc.classList.remove('hidden');
                 } else {
                     document.getElementById('errorMsg').textContent = data.detail;
@@ -135,7 +145,8 @@ async def solve_equation(request: EquationRequest):
         if len(variables) == 0:
             raise HTTPException(status_code=400, detail="Keine Variable gefunden.")
         if len(variables) > 1:
-            raise HTTPException(status_code=400, detail=f"Nur eine Variable unterstützt.")
+            vars_str = ", ".join(map(str, sorted(variables, key=lambda s: s.name)))
+            raise HTTPException(status_code=400, detail=f"Mehrere Variablen gefunden: {vars_str}. Nur eine Variable wird unterstützt.")
         var = list(variables)[0]
         if not sp.degree(lhs - rhs, var) == 1:
              raise HTTPException(status_code=400, detail="Nur lineare Gleichungen unterstützt.")
@@ -143,7 +154,41 @@ async def solve_equation(request: EquationRequest):
         if not solutions:
             return {"result": "Keine Lösung"}
         result = solutions[0]
-        return {"variable": str(var), "solution": str(result), "numeric_solution": float(result.evalf())}
+        
+        # Periodic decimal detection logic
+        periodic_str = None
+        if isinstance(result, sp.Rational) and not result.is_integer:
+            p, q = result.p, result.q
+            # Simple manual division to find period
+            res = []
+            rem_map = {}
+            num = p % q
+            while num != 0 and num not in rem_map:
+                rem_map[num] = len(res)
+                num *= 10
+                res.append(str(num // q))
+                num %= q
+            
+            whole = str(p // q)
+            if num == 0:
+                # Terminating decimal
+                dec = "".join(res)
+                periodic_str = f"{whole},{dec}" if dec else whole
+            else:
+                # Periodic decimal (German notation: dot above each periodic digit)
+                loop_start = rem_map[num]
+                non_periodic = "".join(res[:loop_start])
+                periodic = "".join(res[loop_start:])
+                # Append Unicode Combining Dot Above (\u0307) to each digit in the period
+                periodic_dotted = "".join([f"{d}\u0307" for d in periodic])
+                periodic_str = f"{whole},{non_periodic}{periodic_dotted}"
+
+        return {
+            "variable": str(var),
+            "solution": str(result),
+            "numeric_solution": float(result.evalf()),
+            "periodic_solution": periodic_str
+        }
     except Exception as e:
         if isinstance(e, HTTPException): raise e
         raise HTTPException(status_code=400, detail=f"Ungültige Gleichung.")
