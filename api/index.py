@@ -1,16 +1,10 @@
 from fastapi import FastAPI, HTTPException
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
 from pydantic import BaseModel
 import sympy as sp
 import os
-from pathlib import Path
 
-# Initialisierung der App
+# App-Instanz
 app = FastAPI()
-
-# Bestimmen, ob wir lokal oder auf Vercel laufen
-IS_VERCEL = "VERCEL" in os.environ
 
 class EquationRequest(BaseModel):
     equation: str
@@ -25,7 +19,7 @@ async def solve_equation(request: EquationRequest):
     try:
         lhs_str, rhs_str = eq_str.split("=", 1)
         
-        # SymPy Parser Transformationen
+        # SymPy Parser Transformationen (inkl. impliziter Multiplikation und ^ Support)
         from sympy.parsing.sympy_parser import parse_expr, standard_transformations, implicit_multiplication_application, convert_xor
         transformations = standard_transformations + (implicit_multiplication_application, convert_xor)
         
@@ -67,15 +61,3 @@ async def solve_equation(request: EquationRequest):
 @app.get("/api/health")
 async def health():
     return {"status": "ok"}
-
-# Lokales Serving: Ermöglicht den Aufruf der UI unter localhost:8000
-# Vercel nutzt dafür automatisch seine statischen Routen.
-if not IS_VERCEL:
-    BASE_DIR = Path(__file__).resolve().parent.parent
-    PUBLIC_DIR = BASE_DIR / "public"
-    if PUBLIC_DIR.exists():
-        @app.get("/")
-        async def serve_index():
-            return FileResponse(str(PUBLIC_DIR / "index.html"))
-        
-        app.mount("/", StaticFiles(directory=str(PUBLIC_DIR)), name="static")
