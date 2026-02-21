@@ -9,7 +9,7 @@ from pathlib import Path
 
 app = FastAPI()
 
-# Bestimmen, ob wir lokal oder auf Vercel laufen
+# Prüfen, ob wir in der Vercel-Umgebung sind
 IS_VERCEL = "VERCEL" in os.environ
 
 class EquationRequest(BaseModel):
@@ -19,15 +19,15 @@ class EquationRequest(BaseModel):
 async def solve_equation(request: EquationRequest):
     eq_str = request.equation.replace(" ", "")
     
-    # Basic validation for "="
+    # Basis-Validierung auf "="
     if "=" not in eq_str:
         raise HTTPException(status_code=400, detail="Die Gleichung muss ein '=' Zeichen enthalten.")
     
     try:
-        # Split into left and right sides
+        # Aufteilung in linke und rechte Seite
         lhs_str, rhs_str = eq_str.split("=", 1)
         
-        # Parse into SymPy expressions with transformations
+        # Parsen mit SymPy-Transformationen (inkl. impliziter Multiplikation und ^ Support)
         from sympy.parsing.sympy_parser import parse_expr, standard_transformations, implicit_multiplication_application, convert_xor
         
         transformations = standard_transformations + (implicit_multiplication_application, convert_xor)
@@ -35,10 +35,10 @@ async def solve_equation(request: EquationRequest):
         lhs = parse_expr(lhs_str, transformations=transformations)
         rhs = parse_expr(rhs_str, transformations=transformations)
         
-        # Formulate equation: lhs - rhs = 0
+        # Gleichung formulieren: lhs - rhs = 0
         equation = sp.Eq(lhs, rhs)
         
-        # Identify variables
+        # Variablen identifizieren
         variables = equation.free_symbols
         
         if len(variables) == 0:
@@ -49,25 +49,22 @@ async def solve_equation(request: EquationRequest):
         
         var = list(variables)[0]
         
-        # Check if linear
+        # Prüfung auf Linearität
         if not sp.degree(lhs - rhs, var) == 1:
              raise HTTPException(status_code=400, detail="Nur lineare Gleichungen werden unterstützt.")
         
-        # Solve
+        # Lösen
         solutions = sp.solve(equation, var)
         
         if not solutions:
             return {"result": "Keine Lösung"}
         
-        # Return the first (and should be only) solution for linear eq
+        # Ergebnis zurückgeben
         result = solutions[0]
-        
-        # Convert to string or float for JSON
-        result_str = str(result)
             
         return {
             "variable": str(var),
-            "solution": result_str,
+            "solution": str(result),
             "numeric_solution": float(result.evalf())
         }
         
@@ -80,7 +77,7 @@ async def solve_equation(request: EquationRequest):
 async def health():
     return {"status": "ok"}
 
-# Statische Dateien NUR lokal bereitstellen
+# Lokales Serving der UI (wird auf Vercel durch vercel.json rewrites ersetzt)
 if not IS_VERCEL:
     BASE_DIR = Path(__file__).resolve().parent.parent
     PUBLIC_DIR = BASE_DIR / "public"
