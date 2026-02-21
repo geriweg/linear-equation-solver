@@ -5,16 +5,24 @@ from pydantic import BaseModel
 import sympy as sp
 import re
 import os
+from pathlib import Path
 
 app = FastAPI()
 
+# Pfade relativ zur aktuellen Datei bestimmen
+BASE_DIR = Path(__file__).resolve().parent.parent
+PUBLIC_DIR = BASE_DIR / "public"
+INDEX_FILE = PUBLIC_DIR / "index.html"
+
 # Statische Dateien für die lokale Ausführung bereitstellen
-if os.path.exists("public"):
-    app.mount("/public", StaticFiles(directory="public"), name="public")
+if PUBLIC_DIR.exists():
+    app.mount("/public", StaticFiles(directory=str(PUBLIC_DIR)), name="public")
 
 @app.get("/")
 async def read_index():
-    return FileResponse("public/index.html")
+    if INDEX_FILE.exists():
+        return FileResponse(str(INDEX_FILE))
+    raise HTTPException(status_code=404, detail="index.html nicht gefunden.")
 
 class EquationRequest(BaseModel):
     equation: str
