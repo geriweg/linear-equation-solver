@@ -3,13 +3,13 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 import sympy as sp
-import re
 import os
 from pathlib import Path
 
+# Initialisierung der App
 app = FastAPI()
 
-# Prüfen, ob wir in der Vercel-Umgebung sind
+# Bestimmen, ob wir lokal oder auf Vercel laufen
 IS_VERCEL = "VERCEL" in os.environ
 
 class EquationRequest(BaseModel):
@@ -19,26 +19,20 @@ class EquationRequest(BaseModel):
 async def solve_equation(request: EquationRequest):
     eq_str = request.equation.replace(" ", "")
     
-    # Basis-Validierung auf "="
     if "=" not in eq_str:
         raise HTTPException(status_code=400, detail="Die Gleichung muss ein '=' Zeichen enthalten.")
     
     try:
-        # Aufteilung in linke und rechte Seite
         lhs_str, rhs_str = eq_str.split("=", 1)
         
-        # Parsen mit SymPy-Transformationen (inkl. impliziter Multiplikation und ^ Support)
+        # SymPy Parser Transformationen
         from sympy.parsing.sympy_parser import parse_expr, standard_transformations, implicit_multiplication_application, convert_xor
-        
         transformations = standard_transformations + (implicit_multiplication_application, convert_xor)
         
         lhs = parse_expr(lhs_str, transformations=transformations)
         rhs = parse_expr(rhs_str, transformations=transformations)
         
-        # Gleichung formulieren: lhs - rhs = 0
         equation = sp.Eq(lhs, rhs)
-        
-        # Variablen identifizieren
         variables = equation.free_symbols
         
         if len(variables) == 0:
@@ -49,17 +43,14 @@ async def solve_equation(request: EquationRequest):
         
         var = list(variables)[0]
         
-        # Prüfung auf Linearität
         if not sp.degree(lhs - rhs, var) == 1:
              raise HTTPException(status_code=400, detail="Nur lineare Gleichungen werden unterstützt.")
         
-        # Lösen
         solutions = sp.solve(equation, var)
         
         if not solutions:
             return {"result": "Keine Lösung"}
         
-        # Ergebnis zurückgeben
         result = solutions[0]
             
         return {
@@ -71,15 +62,20 @@ async def solve_equation(request: EquationRequest):
     except Exception as e:
         if isinstance(e, HTTPException):
             raise e
-        raise HTTPException(status_code=400, detail=f"Ungültiges Gleichungsformat: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Fehler: {str(e)}")
 
 @app.get("/api/health")
 async def health():
     return {"status": "ok"}
 
-# Lokales Serving der UI (wird auf Vercel durch vercel.json rewrites ersetzt)
+# Lokales Serving: Ermöglicht den Aufruf der UI unter localhost:8000
+# Vercel nutzt dafür automatisch seine statischen Routen.
 if not IS_VERCEL:
     BASE_DIR = Path(__file__).resolve().parent.parent
     PUBLIC_DIR = BASE_DIR / "public"
     if PUBLIC_DIR.exists():
-        app.mount("/", StaticFiles(directory=str(PUBLIC_DIR), html=True), name="public")
+        @app.get("/")
+        async def serve_index():
+            return FileResponse(str(PUBLIC_DIR / "index.html"))
+        
+        app.mount("/", StaticFiles(directory=str(PUBLIC_DIR)), name="static")
