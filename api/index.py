@@ -9,20 +9,8 @@ from pathlib import Path
 
 app = FastAPI()
 
-# Pfade relativ zur aktuellen Datei bestimmen
-BASE_DIR = Path(__file__).resolve().parent.parent
-PUBLIC_DIR = BASE_DIR / "public"
-INDEX_FILE = PUBLIC_DIR / "index.html"
-
-# Statische Dateien für die lokale Ausführung bereitstellen
-if PUBLIC_DIR.exists():
-    app.mount("/public", StaticFiles(directory=str(PUBLIC_DIR)), name="public")
-
-@app.get("/")
-async def read_index():
-    if INDEX_FILE.exists():
-        return FileResponse(str(INDEX_FILE))
-    raise HTTPException(status_code=404, detail="index.html nicht gefunden.")
+# Bestimmen, ob wir lokal oder auf Vercel laufen
+IS_VERCEL = "VERCEL" in os.environ
 
 class EquationRequest(BaseModel):
     equation: str
@@ -91,3 +79,10 @@ async def solve_equation(request: EquationRequest):
 @app.get("/api/health")
 async def health():
     return {"status": "ok"}
+
+# Statische Dateien NUR lokal bereitstellen
+if not IS_VERCEL:
+    BASE_DIR = Path(__file__).resolve().parent.parent
+    PUBLIC_DIR = BASE_DIR / "public"
+    if PUBLIC_DIR.exists():
+        app.mount("/", StaticFiles(directory=str(PUBLIC_DIR), html=True), name="public")
